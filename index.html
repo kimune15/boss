@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>메이플스토리 보스 체크리스트 (므네 / 무능이 / 세로)</title>
+    <style>
+        :root {
+            --bg-color: #0f111a;
+            --card-bg: #1a1c29;
+            --card-border: #2a2e43;
+            --text-main: #f0f2f5;
+            --text-sub: #9ca3af;
+            --accent: #8b5cf6;
+            --accent-hover: #7c3aed;
+            --success: #10b981;
+            --danger: #ef4444;
+        }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+        }
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            padding: 20px;
+            min-height: 100vh;
+        }
+        header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+        h1 {
+            font-size: 1.8rem;
+            margin-bottom: 8px;
+            color: #fff;
+            background: linear-gradient(90deg, #a78bfa, #f472b6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .timer-container {
+            font-size: 0.95rem;
+            color: var(--text-sub);
+            background: var(--card-bg);
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: 1px solid var(--card-border);
+            margin-bottom: 16px;
+        }
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+        button {
+            background-color: var(--card-bg);
+            color: var(--text-main);
+            border: 1px solid var(--card-border);
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        button:hover {
+            border-color: var(--accent);
+            background-color: #24283b;
+        }
+        button.active {
+            background-color: var(--accent);
+            border-color: var(--accent);
+            color: white;
+        }
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .boss-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+        .boss-header {
+            padding: 14px 16px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border-bottom: 1px solid var(--card-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .boss-header.익수 { background: linear-gradient(135deg, #1e293b, #0f172a); border-left: 5px solid #3b82f6; }
+        .boss-header.융성 { background: linear-gradient(135deg, #3b1f1e, #1a0f0e); border-left: 5px solid #f59e0b; }
+        .boss-header.카링 { background: linear-gradient(135deg, #3b1e32, #1a0f1d); border-left: 5px solid #ec4899; }
+        .boss-header.벨로나 { background: linear-gradient(135deg, #2e1e3b, #130f1a); border-left: 5px solid #8b5cf6; }
+        
+        .party-list {
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .party-item {
+            background-color: #12141f;
+            border: 1px solid #222638;
+            border-radius: 8px;
+            padding: 10px 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .party-item:hover {
+            background-color: #181c2e;
+        }
+        .party-item.completed {
+            opacity: 0.5;
+            border-color: #10b98133;
+        }
+        .party-item.completed .party-title {
+            text-decoration: line-through;
+            color: var(--text-sub);
+        }
+        input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--accent);
+            cursor: pointer;
+        }
+        .party-info {
+            flex-grow: 1;
+        }
+        .party-top {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        .party-sub {
+            font-size: 0.8rem;
+            color: var(--text-sub);
+        }
+        .badge {
+            font-size: 0.7rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background: #2a2e43;
+            color: #d1d5db;
+        }
+        .footer-note {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 0.85rem;
+            color: var(--text-sub);
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>🎮 메이플스토리 보스 파티 체크리스트</h1>
+        <div class="timer-container" id="resetTimer">목요일 초기화까지 계산 중...</div>
+        <div class="controls">
+            <button class="active" onclick="filterParties('all')">전체 보기</button>
+            <button onclick="filterParties('므네')">므네 파티만</button>
+            <button onclick="filterParties('무능이')">무능이 파티만</button>
+            <button onclick="filterParties('세로')">세로 파티만</button>
+            <button onclick="resetChecks()" style="border-color: #ef4444; color: #ef4444;">체크 초기화</button>
+        </div>
+    </header>
+
+    <div class="grid-container" id="bossContainer">
+        <!-- 파티 카드가 JS를 통해 동적으로 렌더링됩니다 -->
+    </div>
+
+    <div class="footer-note">
+        매주 목요일 오전 0시 기준 자동 초기화 | 데이터는 브라우저에 자동 저장됩니다.
+    </div>
+
+    <script>
+        const bossData = [
+            {
+                name: "익수",
+                parties: [
+                    { id: "익수_1", num: 1, members: "무능이 + 세로", jobs: "듀블 / 레테" },
+                    { id: "익수_2", num: 2, members: "무능이 + 세로", jobs: "레테 / 루미" },
+                    { id: "익수_3", num: 3, members: "무능이 + 므네", jobs: "플위 / 렌" },
+                    { id: "익수_4", num: 4, members: "무능이 + 망고", jobs: "렌 / 망고" },
+                    { id: "익수_5", num: 5, members: "세로 + 무능이", jobs: "썬콜 / 카이저" },
+                    { id: "익수_6", num: 6, members: "므네 + ?", jobs: "키네 / ?" }
+                ]
+            },
+            {
+                name: "융성",
+                parties: [
+                    { id: "융성_1", num: 1, members: "무능이 + 망고 + 므네", jobs: "듀블 / 망고 / 키네" },
+                    { id: "융성_2", num: 2, members: "무능이 + 세로", jobs: "레테 / 루미" },
+                    { id: "융성_3", num: 3, members: "무능이 + 므네", jobs: "플위 / 렌" },
+                    { id: "융성_4", num: 4, members: "무능이 + 세로", jobs: "렌 / 레테" }
+                ]
+            },
+            {
+                name: "카링",
+                parties: [
+                    { id: "카링_1", num: 1, members: "무능이 + 세로", jobs: "듀블 / 썬콜" },
+                    { id: "카링_2", num: 2, members: "무능이 + 므네", jobs: "레테 / 렌" },
+                    { id: "카링_3", num: 3, members: "무능이 + 세로", jobs: "렌 / 레테" },
+                    { id: "카링_4", num: 4, members: "므네 + ?", jobs: "아크 / ?" }
+                ]
+            },
+            {
+                name: "벨로나",
+                parties: [
+                    { id: "벨로나_1", num: 1, members: "세로 + 무능이", jobs: "썬콜 / 렌" }
+                ]
+            }
+        ];
+
+        let currentFilter = 'all';
+
+        function getWeekNumber(d) {
+            // 목요일 기준 주차 계산 (메이플스토리 초기화 기준)
+            d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+            d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay()||7));
+            var yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1));
+            var weekNo = Math.ceil(( ( (d - yearStart) / 86400000) + 1)/7);
+            return `${d.getUTCFullYear()}-W${weekNo}`;
+        }
+
+        function checkWeeklyReset() {
+            const now = new Date();
+            // 목요일 초기화 체크 로직 (로컬스토리지에 저장된 주차와 비교)
+            const currentWeek = getWeekNumber(now);
+            const savedWeek = localStorage.getItem('maple_boss_week');
+
+            if (savedWeek !== currentWeek) {
+                // 주가 바뀌었으면 체크 초기화
+                const keys = Object.keys(localStorage);
+                keys.forEach(key => {
+                    if (key.startsWith('boss_')) {
+                        localStorage.removeItem(key);
+                    }
+                });
+                localStorage.setItem('maple_boss_week', currentWeek);
+            }
+        }
+
+        function updateTimer() {
+            const now = new Date();
+            // 다가오는 목요일 00:00 계산
+            const day = now.getDay();
+            // 목요일(4)까지 남은 일수 계산
+            let daysUntilThu = (4 - day + 7) % 7;
+            if (daysUntilThu === 0 && (now.getHours() > 0 || now.getMinutes() > 0 || now.getSeconds() > 0)) {
+                // 오늘이 목요일이고 0시가 지났으면 다음주 목요일
+                daysUntilThu = 7;
+            }
+            const nextThu = new Date(now.getFullYear(), now.getMonth(), now.getDate() + daysUntilThu, 0, 0, 0);
+            const diff = nextThu - now;
+
+            const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
+            const m = Math.floor((diff / 1000 / 60) % 60);
+            const s = Math.floor((diff / 1000) % 60);
+
+            document.getElementById('resetTimer').innerText = 
+                `⏰ 목요일 초기화까지 남은 시간: ${d}일 ${h}시간 ${m}분 ${s}초`;
+        }
+
+        function render() {
+            checkWeeklyReset();
+            const container = document.getElementById('bossContainer');
+            container.innerHTML = '';
+
+            bossData.forEach(boss => {
+                // 필터링 적용
+                const filteredParties = boss.parties.filter(p => {
+                    if (currentFilter === 'all') return true;
+                    return p.members.includes(currentFilter);
+                });
+
+                if (filteredParties.length === 0) return;
+
+                const card = document.createElement('div');
+                card.className = 'boss-card';
+
+                let html = `
+                    <div class="boss-header ${boss.name}">
+                        <span>${boss.name}</span>
+                        <span style="font-size: 0.85rem; font-weight: normal; color: var(--text-sub);">${filteredParties.length}개 파티</span>
+                    </div>
+                    <div class="party-list">
+                `;
+
+                filteredParties.forEach(p => {
+                    const isChecked = localStorage.getItem('boss_' + p.id) === 'true';
+                    html += `
+                        <div class="party-item ${isChecked ? 'completed' : ''}" onclick="toggleCheck('${p.id}')">
+                            <input type="checkbox" id="chk_${p.id}" ${isChecked ? 'checked' : ''} onclick="event.stopPropagation(); toggleCheck('${p.id}')">
+                            <div class="party-info">
+                                <div class="party-top">
+                                    <span class="party-title">${p.num}번 파티 (${p.members})</span>
+                                    <span class="badge">${p.jobs}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                html += `</div>`;
+                card.innerHTML = html;
+                container.appendChild(card);
+            });
+        }
+
+        function toggleCheck(id) {
+            const current = localStorage.getItem('boss_' + id) === 'true';
+            localStorage.setItem('boss_' + id, !current);
+            render();
+        }
+
+        function filterParties(member) {
+            currentFilter = member;
+            document.querySelectorAll('.controls button').forEach(btn => {
+                if(!btn.style.borderColor.includes('ef4444')) {
+                    btn.classList.remove('active');
+                }
+            });
+            event.target.classList.add('active');
+            render();
+        }
+
+        function resetChecks() {
+            if(confirm('모든 체크 상태를 초기화하시겠습니까?')) {
+                bossData.forEach(boss => {
+                    boss.parties.forEach(p => {
+                        localStorage.removeItem('boss_' + p.id);
+                    });
+                });
+                render();
+            }
+        }
+
+        setInterval(updateTimer, 1000);
+        updateTimer();
+        render();
+    </script>
+</body>
+</html>
